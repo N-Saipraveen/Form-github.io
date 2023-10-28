@@ -1,4 +1,23 @@
 <?php
+// Database configuration
+$db_host = 'localhost';
+$db_user = 'root';
+$db_pass = 'qwer1234';
+$db_name = 'your_database_name';
+
+// Create connection
+$conn = new mysqli($db_host, $db_user, $db_pass, $db_name);
+
+// Check connection
+if ($conn->connect_error) {
+    $error = array("message" => "Connection failed: " . $conn->connect_error);
+    header('Content-Type: application/json');
+    http_response_code(500);
+    echo json_encode($error);
+    exit;
+}
+
+// Check if form fields are not empty
 if (
     empty($_POST['name']) ||
     empty($_POST['email']) ||
@@ -11,34 +30,24 @@ if (
     exit;
 }
 
+// Get form data
 $name = $_POST['name'];
 $email = $_POST['email'];
 $message = $_POST['message'];
 $optin = isset($_POST['optin']) ? $_POST['optin'] : '';
 
-// Create Message
-$to = 'receiver@yoursite.com';
-$email_subject = "Message from a Blocs website.";
-$email_body = "You have received a new message. \n\nName: $name \nEmail: $email \nMessage: $message \nOptin: $optin \n";
-$headers = "MIME-Version: 1.0\r\nContent-type: text/plain; charset=UTF-8\r\n";
-$headers .= "From: contact@yoursite.com\r\n";
-$headers .= "Reply-To: $email";
+// Insert data into the database
+$sql = "INSERT INTO your_table_name (name, email, message, optin) VALUES ('$name', '$email', '$message', '$optin')";
 
-// Post Message
-if (function_exists('mail')) {
-    $result = mail($to, $email_subject, $email_body, $headers);
-    if ($result) {
-        echo "Mail sent successfully";
-    } else {
-        $error = array("message" => "Error sending mail.");
-        header('Content-Type: application/json');
-        http_response_code(500);
-        echo json_encode($error);
-    }
+if ($conn->query($sql) === TRUE) {
+    echo "Data stored successfully";
 } else {
-    $error = array("message" => "The php mail() function is not available on this server.");
+    $error = array("message" => "Error storing data: " . $conn->error);
     header('Content-Type: application/json');
     http_response_code(500);
     echo json_encode($error);
 }
+
+// Close the database connection
+$conn->close();
 ?>
